@@ -19,21 +19,9 @@ class Point:
 
 def path_dist_btw2(a: Point, b: Point) -> float:
     """atomic function for calculation distance between neibrough"""
+    # from task's picture
     dist_pif = math.sqrt(abs(a.x - b.x) ** 2 + abs(a.y - b.y) ** 2)
     return dist_pif
-
-
-# seems as better way to do same by using prepared dicts,
-# as we ll need all variants to be calculated
-# def calc_total_path(path_value):
-#     """calculates distance from total path dived to smalls"""
-#     points_tmp = []
-#     paths_tmp = []
-#     for dot in path_value:
-#         if points_tmp:
-#             ribe = path_dist_btw2(points_tmp[-1], dot)
-#             paths_tmp.append(ribe)
-#         points_tmp.append(dot)
 
 
 def path_variants(points: str):
@@ -96,14 +84,6 @@ def main():
     path_pool = path_variants('abcd')
 
     for way in path_pool:
-        # way_dots = list(way)
-        # cur_way_segs = {}
-        # for i in range(1, len(way_dots)):
-        #     chunk = way_dots[i] + way_dots[i+1]
-        #     cur_way_segs += chunk
-        # for way_seg in cur_way_segs:
-        #     pass
-
         dist = 0
         for k in all_paths_dict.keys():
             if k in way:
@@ -112,17 +92,17 @@ def main():
 
     sorted_extenses_dict = sorted(full_extenses_dict,
                                   key=full_extenses_dict.__getitem__)
-    best = sorted_extenses_dict[-1]  # , sorted_extenses_dict[-1]
+    best = sorted_extenses_dict[0]  # , sorted_extenses_dict[-1]
     # print(path_pool)
     print(best)
     # print(full_extenses_dict)
 
-#here we could create an output function,
-#but...no tests here, as in task_repo
-#there was omited 'sadovaya'
+    # here we could create an output function,
+    # but...no tests here, as in task_repo
+    # there was omited 'sadovaya'
     answer_dots = []
     answer_dist = 0
-    for dot in (l_b := list(best)):
+    for dot in (list(best)):
         print(points_dict[dot], end='')
         # break on ! somehow, ref!
         if answer_dots:
