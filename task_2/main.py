@@ -1,5 +1,6 @@
 """AI, numpy and game theory versus YOU"""
 import sys
+from functools import singledispatch
 from os import system, name
 from random import choice
 
@@ -40,6 +41,7 @@ TURN_FLAG = False
 PLAYER_CODE = 0
 AI_CODE = 1
 
+
 def choose_first():
     """Returns boolean value whether the player wins the game."""
     return choice((1, 2))
@@ -58,15 +60,6 @@ def h_turn_inp():
     return int(coord_x), int(coord_y)
 
 
-# THis func is not urgent
-def display():
-    """Shows board in human readable format"""
-    for i in range(10):
-        for j in range(10):
-            if GAME_BOARD[i][j] == 11111:
-                pass
-
-
 def check_out_space():
     """Waits until all fields are occupied"""
     if set(BOARD_VIEW) == {1, 2}:
@@ -80,6 +73,7 @@ def game_finish_output(winner_code):
         sys.exit(f'Player {winner_code} wins!!!')
 
 
+# unused in case of extra calculations
 def game_finish_check():
     """Looking for win strokes on the board.
     Vertical, horizontal lines, or diagonals"""
@@ -106,71 +100,97 @@ def game_finish_check():
 
 def game_fin_aftr_mark_plcd(x, y, player_mark):
     """Checks fro completed lines.
-    Called after each turn
+    Called after each turn,
+    on next turn calculation
     """
     # game_finish_check upgraded
     # Was needed to refactor in case of speed and memory optimization
     for dg_cnt in range(5):
-        if (x-dg_cnt in range(10)) and (y-dg_cnt in range(10)):
-        # here s check for diag existance
+        if (x - dg_cnt in range(10)) and (y - dg_cnt in range(10)):
+            # here s check for diag existance
             win_cond_diag = GAME_BOARD[x - dg_cnt][y - dg_cnt] == GAME_BOARD[x - dg_cnt + 1][y - dg_cnt + 1] == \
                             GAME_BOARD[x - dg_cnt + 2][y - dg_cnt + 2] == GAME_BOARD[x - dg_cnt + 3][y - dg_cnt + 3] == \
                             GAME_BOARD[x - dg_cnt + 4][y - dg_cnt + 4] == player_mark
             if win_cond_diag:
                 game_finish_output(PLAYER_CODE)
     for hz_cnt in range(5):
-        if x-hz_cnt in range(10):
+        if x - hz_cnt in range(10):
             win_cond_horiz = GAME_BOARD[x - hz_cnt][y] == GAME_BOARD[x - hz_cnt + 1][y] == \
-                             GAME_BOARD[x - hz_cnt + 2][y] == GAME_BOARD[x - hz_cnt + 3][y] ==\
+                             GAME_BOARD[x - hz_cnt + 2][y] == GAME_BOARD[x - hz_cnt + 3][y] == \
                              GAME_BOARD[x - hz_cnt + 4][y] == player_mark
             if win_cond_horiz:
                 game_finish_output(PLAYER_CODE)
     for vert_cnt in range(5):
-        if y-vert_cnt in range(10):
-            win_cond_vert = GAME_BOARD[x][y - vert_cnt] == GAME_BOARD[x][y - vert_cnt + 1] ==\
-                            GAME_BOARD[x][y - vert_cnt + 2] == GAME_BOARD[x][y - vert_cnt + 3] ==\
+        if y - vert_cnt in range(10):
+            win_cond_vert = GAME_BOARD[x][y - vert_cnt] == GAME_BOARD[x][y - vert_cnt + 1] == \
+                            GAME_BOARD[x][y - vert_cnt + 2] == GAME_BOARD[x][y - vert_cnt + 3] == \
                             GAME_BOARD[x][y - vert_cnt + 4] == player_mark
             if win_cond_vert:
                 game_finish_output(PLAYER_CODE)
 
 
-def estimate_cells():
-    """Calculates the cells value for current board
-    and returns the most with updating
-    global GAME_BOARD variable
+def ai_move() -> tuple(int, int):
+    """Just a mock function without
+    any algorythm except random numbers generating
     """
-    cur_mark = PLAYER_CODE
-    CALC_BOARD = numpy.empty_like(GAME_BOARD)
-    CALC_BOARD[:] = GAME_BOARD
-    for m in range(10):
-        for n in range(10):
-            if CALC_BOARD[m][n] == 0:
-                CALC_BOARD[m][n] = cur_mark
-                game_finish_check()
-                check_out_space()
+    pool = numpy.where(POSSIBLE_TURNS[:] == 1)
+    pool_coord = tuple(zip(pool[0], pool[1]))
+    rand_coord = choice(pool_coord)
+    return rand_coord
+
+
+# def estimate_cells():
+#     """Calculates the cells value for current board
+#     and returns the most with updating
+#     global GAME_BOARD variable
+#     """
+#     cur_mark = PLAYER_CODE
+#     CALC_BOARD = numpy.empty_like(GAME_BOARD)
+#     CALC_BOARD[:] = GAME_BOARD
+#     for m in range(10):
+#         for n in range(10):
+#             if CALC_BOARD[m][n] == 0:
+#                 CALC_BOARD[m][n] = cur_mark
+#                 game_finish_check()
+#                 check_out_space()
+#     pass
+
+
+#also need chunks composition strategy
+#to make victory composition from separate areas
+
+def strategy_turn_predict() -> tuple(int, int):
+    """:returns the most valuable cell
+    coordinates to make a turn
+    based on next placements outcome
+    used on board allmost filled"""
     pass
 
 
-def strategy():
-    """:returns the most valuable cell
-    coordinates to make a turn"""
+def strategy_line_completion() -> tuple(int, int):
+    """Coordinates based on which fields need to be
+    marked to complete or block potential lines
+    """
+    pass
 
 
 def turn(x, y, player):
     """making operations threaded with each
     turn"""
     if player:
-        GAME_BOARD[x][y] = 11111
+        # GAME_BOARD[x][y] = 11111
         BOARD_VIEW[x][y] = 1
     else:
-        GAME_BOARD[x][y] = 10101
+        # GAME_BOARD[x][y] = 10101
         BOARD_VIEW[x][y] = 2
+    POSSIBLE_TURNS[x - 1][y - 1] = 0
+    # passing the turn order
     global TURN_FLAG
     TURN_FLAG = not TURN_FLAG
-    # passing the turn order
 
 
 # so needed...
+@singledispatch
 def logging(result='I WIN', *turn_data):
     """write down the game"""
     # players can cross over and replay
@@ -191,6 +211,12 @@ def logging(result='I WIN', *turn_data):
     def record_turn(*coords):
         """coordinates of mark"""
         list_of_turns.add((coords))
+
+
+# different handlers for typed input
+@logging.register
+def logging():
+    pass
 
 
 def clear():
