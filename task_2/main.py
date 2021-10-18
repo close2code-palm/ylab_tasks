@@ -56,13 +56,13 @@ def show_board():
 def h_turn_inp():
     """Taking coordinates in turn from brave player"""
     print("Now its your turn!!!")
-    coord_x = input("Enter your choice(x):")
-    coord_y = input("Enter your choice(y):")
+    coord_x = input("Enter your choice(row):")
+    coord_y = input("Enter your choice(column):")
     ret_x = int(coord_x)
     ret_y = int(coord_y)
-    return ret_y, ret_x if ret_y in range(10) and ret_x in range(10) and \
+    return ret_x, ret_y if ret_y in range(10) and ret_x in range(10) and \
         POSSIBLE_TURNS[ret_x][ret_y] else\
-        sys.exit('Learn the rules before to play')
+        sys.exit('Learn the rules before to play.')
 
 
 def check_out_space():
@@ -152,7 +152,7 @@ def ai_move() -> tuple[int, int]:
     rand_coord = choice(pool_coord)
     return rand_coord
 
-
+# too big to make a tree
 # def estimate_cells():
 #     """Calculates the cells value for current board
 #     and returns the most with updating
@@ -205,7 +205,7 @@ def turn(x, y, player):
     TURN_FLAG = not TURN_FLAG
 
 
-# so needed...
+# so needed... to improve my algorythm by
 @singledispatch
 def logging(result='I WIN', *turn_data):
     """write down the game"""
@@ -248,7 +248,7 @@ def clear():
 
 
 def update():
-    clear()  # not emtying...
+    # clear()  # not emtying...
     print('\n' * 20)
     show_board()
 
