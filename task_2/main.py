@@ -25,9 +25,10 @@ GAME_BOARD = np.zeros((10, 10))
 BOARD_VIEW = np.zeros((11, 11))
 
 BOARD_VIEW[0] = np.arange(-1, 10)
+BOARD_VIEW[1:, 0] = np.arange(10)
 
-for i in range(-1, 10):
-    BOARD_VIEW[0][i] = i
+# for i in range(-1, 10):
+#     BOARD_VIEW[0][i] = i
 
 # masks
 POSSIBLE_TURNS = np.ones((10, 10))
@@ -36,15 +37,15 @@ POSSIBLE_TURNS = np.ones((10, 10))
 h_player_mark = '#'
 
 # used to track 'turn owners'
-TURN_FLAG = False
+TURN_FLAG: bool = False
 
-PLAYER_CODE = 0
+PLAYER_CODE = 2
 AI_CODE = 1
 
 
 def choose_first():
     """Returns boolean value whether the player wins the game."""
-    return choice((1, 2))
+    return choice((1, 0))
 
 
 def show_board():
@@ -62,7 +63,7 @@ def h_turn_inp():
 
 def check_out_space():
     """Waits until all fields are occupied"""
-    if set(BOARD_VIEW) == {1, 2}:
+    if set(GAME_BOARD) == {1, 2}:
         game_finish_output(0)
 
 
@@ -108,28 +109,30 @@ def game_fin_aftr_mark_plcd(x, y, player_mark):
     for dg_cnt in range(5):
         if (x - dg_cnt in range(10)) and (y - dg_cnt in range(10)):
             # here s check for diag existance
+            # and other are equalent
+            # IMP!!!
             win_cond_diag = GAME_BOARD[x - dg_cnt][y - dg_cnt] == GAME_BOARD[x - dg_cnt + 1][y - dg_cnt + 1] == \
                             GAME_BOARD[x - dg_cnt + 2][y - dg_cnt + 2] == GAME_BOARD[x - dg_cnt + 3][y - dg_cnt + 3] == \
-                            GAME_BOARD[x - dg_cnt + 4][y - dg_cnt + 4] == player_mark
+                            GAME_BOARD[x - dg_cnt + 4][y - dg_cnt + 4]  # == player_mark
             if win_cond_diag:
-                game_finish_output(PLAYER_CODE)
+                game_finish_output(player_mark)
     for hz_cnt in range(5):
         if x - hz_cnt in range(10):
             win_cond_horiz = GAME_BOARD[x - hz_cnt][y] == GAME_BOARD[x - hz_cnt + 1][y] == \
                              GAME_BOARD[x - hz_cnt + 2][y] == GAME_BOARD[x - hz_cnt + 3][y] == \
-                             GAME_BOARD[x - hz_cnt + 4][y] == player_mark
+                             GAME_BOARD[x - hz_cnt + 4][y]  # == player_mark
             if win_cond_horiz:
-                game_finish_output(PLAYER_CODE)
+                game_finish_output(player_mark)
     for vert_cnt in range(5):
         if y - vert_cnt in range(10):
             win_cond_vert = GAME_BOARD[x][y - vert_cnt] == GAME_BOARD[x][y - vert_cnt + 1] == \
                             GAME_BOARD[x][y - vert_cnt + 2] == GAME_BOARD[x][y - vert_cnt + 3] == \
-                            GAME_BOARD[x][y - vert_cnt + 4] == player_mark
+                            GAME_BOARD[x][y - vert_cnt + 4]  # == player_mark
             if win_cond_vert:
-                game_finish_output(PLAYER_CODE)
+                game_finish_output(player_mark)
 
 
-def ai_move() -> tuple(int, int):
+def ai_move() -> tuple[int, int]:
     """Just a mock function without
     any algorythm except random numbers generating
     """
@@ -156,10 +159,12 @@ def ai_move() -> tuple(int, int):
 #     pass
 
 
-#also need chunks composition strategy
-#to make victory composition from separate areas
+# also need chunks composition strategy
+# to make victory composition from separate areas
 
-def strategy_turn_predict() -> tuple(int, int):
+def strategy_turn_predict() -> tuple[int, int]:
+    # lru cache for 2 of 4
+    # index can be raised by optimization
     """:returns the most valuable cell
     coordinates to make a turn
     based on next placements outcome
@@ -167,7 +172,7 @@ def strategy_turn_predict() -> tuple(int, int):
     pass
 
 
-def strategy_line_completion() -> tuple(int, int):
+def strategy_line_completion() -> tuple[int, int]:
     """Coordinates based on which fields need to be
     marked to complete or block potential lines
     """
@@ -214,9 +219,9 @@ def logging(result='I WIN', *turn_data):
 
 
 # different handlers for typed input
-@logging.register
-def logging():
-    pass
+# @logging.register(None)
+# def logging():
+#     pass
 
 
 def clear():
@@ -243,14 +248,22 @@ def main():
 
     # A draw, its information output
     global PLAYER_CODE
-    PLAYER_CODE = choose_first()
-    player_readable = "Computer" if PLAYER_CODE == 1 else "Human"
-    print(f'Its {player_readable} time to go first!!!')
+    TURN_FLAG = choose_first()
+    player_readable = "Computer" if TURN_FLAG == 1 else "Human"
+    print(f'Its {player_readable}\'s time to go first!!!')
     show_board()
 
     while True:
-        game_finish_check()
-        show_board()
+        #mark = PLAYER_CODE if TURN_FLAG else AI_CODE
+        if TURN_FLAG:
+            point = ai_move()
+            turn(*point, AI_CODE)
+        else:
+            point = h_turn_inp()
+            turn(*point, PLAYER_CODE)
+        update()
+        game_fin_aftr_mark_plcd(*point, player_readable)
+        check_out_space()
 
 
 if __name__ == '__main__':
