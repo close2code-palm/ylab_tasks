@@ -45,7 +45,7 @@ AI_CODE = 1
 
 def choose_first():
     """Returns boolean value whether the player wins the game."""
-    return choice((1, 0))
+    return choice((True, False))
 
 
 def show_board():
@@ -58,20 +58,25 @@ def h_turn_inp():
     print("Now its your turn!!!")
     coord_x = input("Enter your choice(x):")
     coord_y = input("Enter your choice(y):")
-    return int(coord_x), int(coord_y)
+    ret_x = int(coord_x)
+    ret_y = int(coord_y)
+    return ret_y, ret_x if ret_y in range(10) and ret_x in range(10) and \
+        POSSIBLE_TURNS[ret_x][ret_y] else\
+        sys.exit('Learn the rules before to play')
 
 
 def check_out_space():
     """Waits until all fields are occupied"""
-    if set(GAME_BOARD) == {1, 2}:
-        game_finish_output(0)
+    # if set(GAME_BOARD) == {1, 2}:
+    if not np.any(GAME_BOARD):
+        game_finish_output('Draw')
 
 
 def game_finish_output(winner_code):
-    if not winner_code:
+    if winner_code == 'Draw':
         sys.exit('Draw, game board is empty')
     else:
-        sys.exit(f'Player {winner_code} wins!!!')
+        sys.exit('Player ' + winner_code + ' wins!!!')
 
 
 # unused in case of extra calculations
@@ -106,30 +111,36 @@ def game_fin_aftr_mark_plcd(x, y, player_mark):
     """
     # game_finish_check upgraded
     # Was needed to refactor in case of speed and memory optimization
-    for dg_cnt in range(5):
+    for dg_cnt in range(5, 10):
         if (x - dg_cnt in range(10)) and (y - dg_cnt in range(10)):
             # here s check for diag existance
             # and other are equalent
             # IMP!!!
             win_cond_diag = GAME_BOARD[x - dg_cnt][y - dg_cnt] == GAME_BOARD[x - dg_cnt + 1][y - dg_cnt + 1] == \
                             GAME_BOARD[x - dg_cnt + 2][y - dg_cnt + 2] == GAME_BOARD[x - dg_cnt + 3][y - dg_cnt + 3] == \
-                            GAME_BOARD[x - dg_cnt + 4][y - dg_cnt + 4]  # == player_mark
+                            GAME_BOARD[x - dg_cnt + 4][y - dg_cnt + 4] != 0  # == player_mark
             if win_cond_diag:
                 game_finish_output(player_mark)
     for hz_cnt in range(5):
-        if x - hz_cnt in range(10):
+        try:
+            # if x - hz_cnt in range(10):
             win_cond_horiz = GAME_BOARD[x - hz_cnt][y] == GAME_BOARD[x - hz_cnt + 1][y] == \
                              GAME_BOARD[x - hz_cnt + 2][y] == GAME_BOARD[x - hz_cnt + 3][y] == \
-                             GAME_BOARD[x - hz_cnt + 4][y]  # == player_mark
+                             GAME_BOARD[x - hz_cnt + 4][y] != 0  # == player_mark
             if win_cond_horiz:
                 game_finish_output(player_mark)
+        except IndexError:
+            pass
     for vert_cnt in range(5):
-        if y - vert_cnt in range(10):
+        try:
+            # if y - vert_cnt in range(10):
             win_cond_vert = GAME_BOARD[x][y - vert_cnt] == GAME_BOARD[x][y - vert_cnt + 1] == \
                             GAME_BOARD[x][y - vert_cnt + 2] == GAME_BOARD[x][y - vert_cnt + 3] == \
-                            GAME_BOARD[x][y - vert_cnt + 4]  # == player_mark
+                            GAME_BOARD[x][y - vert_cnt + 4] != 0  # == player_mark
             if win_cond_vert:
                 game_finish_output(player_mark)
+        except IndexError:
+            pass
 
 
 def ai_move() -> tuple[int, int]:
@@ -182,13 +193,13 @@ def strategy_line_completion() -> tuple[int, int]:
 def turn(x, y, player):
     """making operations threaded with each
     turn"""
-    if player:
-        # GAME_BOARD[x][y] = 11111
-        BOARD_VIEW[x][y] = 1
+    if player == AI_CODE:
+        GAME_BOARD[x][y] = player
+        BOARD_VIEW[x + 1][y + 1] = AI_CODE
     else:
-        # GAME_BOARD[x][y] = 10101
-        BOARD_VIEW[x][y] = 2
-    POSSIBLE_TURNS[x - 1][y - 1] = 0
+        GAME_BOARD[x][y] = player
+        BOARD_VIEW[x + 1][y + 1] = PLAYER_CODE
+    POSSIBLE_TURNS[x][y] = 0
     # passing the turn order
     global TURN_FLAG
     TURN_FLAG = not TURN_FLAG
@@ -237,7 +248,8 @@ def clear():
 
 
 def update():
-    clear()
+    clear()  # not emtying...
+    print('\n' * 20)
     show_board()
 
 
@@ -248,13 +260,15 @@ def main():
 
     # A draw, its information output
     global PLAYER_CODE
+    global TURN_FLAG
     TURN_FLAG = choose_first()
-    player_readable = "Computer" if TURN_FLAG == 1 else "Human"
+    player_readable = "Computer" if TURN_FLAG else "Human"
     print(f'Its {player_readable}\'s time to go first!!!')
     show_board()
 
     while True:
-        #mark = PLAYER_CODE if TURN_FLAG else AI_CODE
+        # mark = PLAYER_CODE if TURN_FLAG else AI_CODE
+        # print(f'Its {player_readable}\'s turn.......')
         if TURN_FLAG:
             point = ai_move()
             turn(*point, AI_CODE)
