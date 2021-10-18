@@ -53,18 +53,6 @@ def show_board():
     print(BOARD_VIEW)
 
 
-def h_turn_inp():
-    """Taking coordinates in turn from brave player"""
-    print("Now its your turn!!!")
-    coord_x = input("Enter your choice(row):")
-    coord_y = input("Enter your choice(column):")
-    ret_x = int(coord_x)
-    ret_y = int(coord_y)
-    return ret_x, ret_y if ret_y in range(10) and ret_x in range(10) and \
-        POSSIBLE_TURNS[ret_x][ret_y] else\
-        sys.exit('Learn the rules before to play.')
-
-
 def check_out_space():
     """Waits until all fields are occupied"""
     # if set(GAME_BOARD) == {1, 2}:
@@ -143,15 +131,6 @@ def game_fin_aftr_mark_plcd(x, y, player_mark):
             pass
 
 
-def ai_move() -> tuple[int, int]:
-    """Just a mock function without
-    any algorythm except random numbers generating
-    """
-    pool = numpy.where(POSSIBLE_TURNS[:] == 1)
-    pool_coord = tuple(zip(pool[0], pool[1]))
-    rand_coord = choice(pool_coord)
-    return rand_coord
-
 # too big to make a tree
 # def estimate_cells():
 #     """Calculates the cells value for current board
@@ -190,15 +169,39 @@ def strategy_line_completion() -> tuple[int, int]:
     pass
 
 
-def turn(x, y, player):
+def turn(player):
     """making operations threaded with each
     turn"""
+
+    def h_turn_inp():
+        """Taking coordinates in turn from brave player"""
+        print("Now its your turn!!!")
+        coord_x = input("Enter your choice(row):")
+        coord_y = input("Enter your choice(column):")
+        ret_x = int(coord_x)
+        ret_y = int(coord_y)
+        return ret_x, ret_y if ret_y in range(10) and ret_x in range(10) and \
+                               POSSIBLE_TURNS[ret_x][ret_y] else sys.exit('Learn the rules before to play.')
+
+    def ai_move() -> tuple[int, int]:
+        """Just a mock function without
+        any algorythm except random numbers generating
+        """
+        pool = numpy.where(POSSIBLE_TURNS[:] == 1)
+        pool_coord = tuple(zip(pool[0], pool[1]))
+        rand_coord = choice(pool_coord)
+        r, c = rand_coord
+        print('My turrrn was {} to {}'.format(r, c))
+        return rand_coord
+
     if player == AI_CODE:
-        GAME_BOARD[x][y] = player
-        BOARD_VIEW[x + 1][y + 1] = AI_CODE
+        x, y = ai_move()
     else:
-        GAME_BOARD[x][y] = player
-        BOARD_VIEW[x + 1][y + 1] = PLAYER_CODE
+        x, y = h_turn_inp()
+    BOARD_VIEW[x + 1][y + 1] = player
+    GAME_BOARD[x][y] = player
+    game_fin_aftr_mark_plcd(x, y, player)
+    check_out_space()
     POSSIBLE_TURNS[x][y] = 0
     # passing the turn order
     global TURN_FLAG
@@ -249,7 +252,9 @@ def clear():
 
 def update():
     # clear()  # not emtying...
-    print('\n' * 20)
+    # print('\n' * 20)
+    print(('   |' * 11 + '  \n') * 19)
+    print('   V' * 11)
     show_board()
 
 
@@ -269,15 +274,17 @@ def main():
     while True:
         # mark = PLAYER_CODE if TURN_FLAG else AI_CODE
         # print(f'Its {player_readable}\'s turn.......')
-        if TURN_FLAG:
-            point = ai_move()
-            turn(*point, AI_CODE)
-        else:
-            point = h_turn_inp()
-            turn(*point, PLAYER_CODE)
+        turn(AI_CODE) if TURN_FLAG else turn(PLAYER_CODE)
         update()
-        game_fin_aftr_mark_plcd(*point, player_readable)
-        check_out_space()
+
+        # if TURN_FLAG:
+        #     point = ai_move()
+        #     turn(*point, AI_CODE)
+        # else:
+        #     point = h_turn_inp()
+        #     turn(*point, PLAYER_CODE)
+        # update()
+        # game_fin_aftr_mark_plcd(*point, player_readable)
 
 
 if __name__ == '__main__':
