@@ -1,5 +1,6 @@
 """AI, numpy and game theory versus YOU"""
 import sys
+import time
 from functools import singledispatch
 from os import system, name
 from random import choice
@@ -10,7 +11,7 @@ import numpy as np
 MARKS = {'X', 'O', '+', '-', '@', '$'}
 
 
-# not important in case of usbility but this fun is pure FP
+# not important in case of usbility but this func is the essence of FP
 def choose_mark() -> MARKS:
     """Gets player's input string to choose the game mark to play."""
     print(MARKS)
@@ -60,11 +61,11 @@ def check_out_space():
         game_finish_output('Draw')
 
 
-def game_finish_output(winner_code):
-    if winner_code == 'Draw':
+def game_finish_output(win_code):
+    if win_code == 'Draw':
         sys.exit('Draw, game board is empty')
     else:
-        sys.exit('Player ' + winner_code + ' wins!!!')
+        sys.exit('Player ' + win_code + ' wins!!!')
 
 
 # unused in case of extra calculations
@@ -92,7 +93,7 @@ def game_finish_check():
     check_out_space()
 
 
-def game_fin_aftr_mark_plcd(x, y, player_mark):
+def game_fin_aftr_mark_plcd(x, y, player_mark, BOARD):
     """Checks fro completed lines.
     Called after each turn,
     on next turn calculation
@@ -131,6 +132,15 @@ def game_fin_aftr_mark_plcd(x, y, player_mark):
             pass
 
 
+def victory_produce(p_c):
+    return game_finish_output(p_c)
+
+
+def check_turn_outcome(x, y):
+    CALC_BOARD = numpy.empty_like(GAME_BOARD)
+    CALC_BOARD[:] = GAME_BOARD
+
+
 # too big to make a tree
 # def estimate_cells():
 #     """Calculates the cells value for current board
@@ -155,6 +165,7 @@ def game_fin_aftr_mark_plcd(x, y, player_mark):
 def strategy_turn_predict() -> tuple[int, int]:
     # lru cache for 2 of 4
     # index can be raised by optimization
+    # so called 'pruning'
     """:returns the most valuable cell
     coordinates to make a turn
     based on next placements outcome
@@ -166,6 +177,7 @@ def strategy_line_completion() -> tuple[int, int]:
     """Coordinates based on which fields need to be
     marked to complete or block potential lines
     """
+
     pass
 
 
@@ -185,14 +197,28 @@ def turn(player):
 
     def ai_move() -> tuple[int, int]:
         """Just a mock function without
-        any algorythm except random numbers generating
+        any algorithm except random numbers generating
         """
         pool = numpy.where(POSSIBLE_TURNS[:] == 1)
-        pool_coord = tuple(zip(pool[0], pool[1]))
-        rand_coord = choice(pool_coord)
-        r, c = rand_coord
-        print('My turrrn was {} to {}'.format(r, c))
-        return rand_coord
+        pool_coord = list(zip(pool[0], pool[1]))
+        while (pool_coord):
+            rand_coord = choice(pool_coord)
+            r, c = rand_coord
+            print()
+
+            def check_turn_outcome(x, y):
+                calc_board = numpy.empty_like(GAME_BOARD)
+                calc_board[:] = GAME_BOARD
+                # try anothr solution on loose
+                c_loose = game_fin_aftr_mark_plcd(x, y, calc_board, AI_CODE)
+                return None if c_loose else x, y
+
+            outcome = check_turn_outcome(r, c)
+            if not check_turn_outcome(r, c):
+                pool_coord -= rand_coord
+            else:
+                print('My turn was {} to {}'.format(r, c))
+                return outcome
 
     if player == AI_CODE:
         x, y = ai_move()
@@ -200,7 +226,10 @@ def turn(player):
         x, y = h_turn_inp()
     BOARD_VIEW[x + 1][y + 1] = player
     GAME_BOARD[x][y] = player
-    game_fin_aftr_mark_plcd(x, y, player)
+    time.sleep(2)
+    v_c = game_fin_aftr_mark_plcd(x, y, player, GAME_BOARD)
+    if v_c:
+        game_finish_output(v_c)
     check_out_space()
     POSSIBLE_TURNS[x][y] = 0
     # passing the turn order
@@ -253,7 +282,7 @@ def clear():
 def update():
     # clear()  # not emtying...
     # print('\n' * 20)
-    print(('   |' * 11 + '  \n') * 19)
+    print(('   |' * 11 + '  \n') * 19, end='')
     print('   V' * 11)
     show_board()
 
